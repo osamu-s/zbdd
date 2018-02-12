@@ -2,11 +2,11 @@
 
 def memoize(f):
     _fcache = {}
-    def _helper(*args):
+    def _wrapper(*args):
         v = _fcache.get(args, None)
         return (v if v
                 else _fcache.setdefault(args, f(*args)) )
-    return _helper
+    return _wrapper
 
 class Bdd_node:
     def __init__(self, top, lo, hi):
