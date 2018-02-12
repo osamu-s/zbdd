@@ -32,23 +32,33 @@ class Nodes:
         print(self.nodes)
 
 
-    @memoize
+
     def subset1(self, p, var):
-        if p.top < var: return 0
+        @memoize
+        def _subset1(p, var):
+            return self.get(p.top,
+                            self.subset1(p.lo, var),
+                            self.subset1(p.hi, var) )
+            
+        if (p == 0 or p == 1): return p
+        if p.top < var: return p
         if p.top == var: return p.hi
         # if p.top > var:
-        return self.get(p.top,
-                        self.subset1(p.lo, var),
-                        self.subset1(p.hi, var) )
+        return _subset1(p, var)
 
-    @memoize
+
     def subset0(self, p, var):
-        if p.top < var: return 0
+        @memoize
+        def _subset0(p, var):
+            return self.get(p.top,
+                            self.subset0(p.lo, var),
+                            self.subset0(p.hi, var) )
+
+        if (p == 0 or p == 1): return p
+        if p.top < var: return p
         if p.top == var: return p.lo
         # if p.top > var:
-        return self.get(p.top,
-                        self.subset0(p.lo, var),
-                        self.subset0(p.hi, var) )
+        return _subset0(p, var)
 
     @memoize
     def change(self, p, var):
@@ -61,53 +71,69 @@ class Nodes:
                         self.change(p.lo, var),
                         self.change(p.hi, var) )
 
-    @memoize
+
     def union(self, p, q):
+        @memoize        
+        def _union(p, q):
+            if p.top > q.top:
+                return self.get(p.top, self.union(p.lo, q), p.hi)
+            # if  p.top == q.top:
+            return self.get(p.top,
+                            self.union(p.lo, q.lo),
+                            self.union(p.hi, q.hi) )
+
         if p == 0: return q
         if q == 0: return p
         if p == q: return p
-        if p.top > q.top:
-            return self.get(p.top, self.union(p.lo, q), p.hi)
         if p.top < q.top:
-            return self.get(p.top, self.union(p, q.lo), q.hi)
-        # if  p.top == q.top:
-        return self.get(p.top,
-                        self.union(p.lo, q.lo),
-                        self.union(p.hi, q.hi) )
-        
-    @memoize
+            # union is Commutative, for hit cache by memoize
+            return self.union(q, p)
+        return _union(p, q)
+
     def intersec(self, p, q):
+        @memoize
+        def _intersec(p, q):
+            return self.get(p.top,
+                            self.intersec(p.lo, q.lo),
+                            self.intersec(p.hi, q.hi) )
+            
         if p == 0: return 0
         if q == 0: return 0
         if p == q: return p
+        if p.top < q.top:
+            return self.intersec(q, p)
         if p.top > q.top:
             return self.intersec(p.lo, q)
-        if p.top < q.top:
-            return self.intersec(p, q.lo)
         # if  p.top == q.top:
-        return self.get(p.top,
-                        self.intersec(p.lo, q.lo),
-                        self.intersec(p.hi, q.hi) )
+        return _intersec(p, q)
                         
-    @memoize
+
     def diff(self, p, q):
+        @memoize
+        def _diff(p, q):
+            if p.top > q.top:
+                return self.get(p.top, self.diff(p.lo, q), p.hi)
+            # if  p.top == q.top:
+            return self.get(p.top,
+                            self.diff(p.lo, q.lo),
+                            self.diff(p.hi, q.hi) )
+            
         if p == 0: return 0
         if q == 0: return p
         if p == q: return 0
-        if p.top > q.top:
-            return self.get(p.top, self.diff(p.lo, q), p.hi)
         if p.top < q.top:
             return self.diff(p, q.lo)
-        # if  p.top == q.top:
-        return self.get(p.top,
-                        self.diff(p.lo, q.lo),
-                        self.diff(p.hi, q.hi) )
+        return _diff(p, q)
 
-    @memoize
+
     def count(self, p):
+        @memoize
+        def _count(p):
+            return self.count(p.lo) + self.count(p.hi)
+            
         if p == 0: return 0
         if p == 1: return 1
-        return self.count(p.lo) + self.count(p.hi)
+        return _count(p)
 
 
 if __name__ == '__main__':
