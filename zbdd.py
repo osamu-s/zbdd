@@ -4,15 +4,19 @@ def memoize(f):
     _fcache = {}
     def _wrapper(*args):
         v = _fcache.get(args, None)
+        # if expression acts in lazy evaluation for values in python2, 3
         return (v if v
                 else _fcache.setdefault(args, f(*args)) )
+                
     return _wrapper
+
 
 class Bdd_node:
     def __init__(self, top, lo, hi):
         self.top = top
         self.lo = lo
         self.hi = hi
+
 
 class Nodes:
     def __init__(self):
@@ -30,8 +34,6 @@ class Nodes:
 
     def print(self):
         print(self.nodes)
-
-
 
     def subset1(self, p, var):
         @memoize
@@ -71,12 +73,9 @@ class Nodes:
                         self.change(p.lo, var),
                         self.change(p.hi, var) )
 
-
     def union(self, p, q):
         @memoize        
         def _union(p, q):
-            if p.top > q.top:
-                return self.get(p.top, self.union(p.lo, q), p.hi)
             # if  p.top == q.top:
             return self.get(p.top,
                             self.union(p.lo, q.lo),
@@ -88,11 +87,14 @@ class Nodes:
         if p.top < q.top:
             # union is Commutative, for hit cache by memoize
             return self.union(q, p)
+        if p.top > q.top:
+            return self.get(p.top, self.union(p.lo, q), p.hi)
         return _union(p, q)
 
     def intersec(self, p, q):
         @memoize
         def _intersec(p, q):
+            # if  p.top == q.top:
             return self.get(p.top,
                             self.intersec(p.lo, q.lo),
                             self.intersec(p.hi, q.hi) )
@@ -104,15 +106,11 @@ class Nodes:
             return self.intersec(q, p)
         if p.top > q.top:
             return self.intersec(p.lo, q)
-        # if  p.top == q.top:
         return _intersec(p, q)
-                        
 
     def diff(self, p, q):
         @memoize
         def _diff(p, q):
-            if p.top > q.top:
-                return self.get(p.top, self.diff(p.lo, q), p.hi)
             # if  p.top == q.top:
             return self.get(p.top,
                             self.diff(p.lo, q.lo),
@@ -123,8 +121,9 @@ class Nodes:
         if p == q: return 0
         if p.top < q.top:
             return self.diff(p, q.lo)
+        if p.top > q.top:
+            return self.get(p.top, self.diff(p.lo, q), p.hi)
         return _diff(p, q)
-
 
     def count(self, p):
         @memoize
