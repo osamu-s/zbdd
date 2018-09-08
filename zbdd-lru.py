@@ -1,12 +1,6 @@
 #!/usr/bin/env python3
 
-def memoize(f):
-    _fcache = {}
-    def _wrapper(*args):
-        v = _fcache.get(args, None)
-        return (v if v
-                else _fcache.setdefault(args, f(*args)) )
-    return _wrapper
+from functools import lru_cache
 
 class Bdd_node:
     def __init__(self, top, lo, hi):
@@ -34,7 +28,7 @@ class ZBDD_Nodes:
 
 
     def subset1(self, p, var):
-        @memoize
+        @lru_cache(maxsize=256)
         def _subset1(p, var):
             return self.get(p.top,
                             self.subset1(p.lo, var),
@@ -48,7 +42,7 @@ class ZBDD_Nodes:
 
 
     def subset0(self, p, var):
-        @memoize
+        @lru_cache(maxsize=256)
         def _subset0(p, var):
             return self.get(p.top,
                             self.subset0(p.lo, var),
@@ -60,7 +54,7 @@ class ZBDD_Nodes:
         # if p.top > var:
         return _subset0(p, var)
 
-    @memoize
+    @lru_cache(maxsize=256)
     def change(self, p, var):
         if p.top < var:
             return self.get(var, 0, p)
@@ -73,7 +67,7 @@ class ZBDD_Nodes:
 
 
     def union(self, p, q):
-        @memoize        
+        @lru_cache(maxsize=256)        
         def _union(p, q):
             if p.top > q.top:
                 return self.get(p.top, self.union(p.lo, q), p.hi)
@@ -86,12 +80,12 @@ class ZBDD_Nodes:
         if q == 0: return p
         if p == q: return p
         if p.top < q.top:
-            # union is Commutative, for hit cache by memoize
+            # union is Commutative, for hit cache by lru_cache(maxsize=256)
             return self.union(q, p)
         return _union(p, q)
 
     def intersec(self, p, q):
-        @memoize
+        @lru_cache(maxsize=256)
         def _intersec(p, q):
             return self.get(p.top,
                             self.intersec(p.lo, q.lo),
@@ -109,7 +103,7 @@ class ZBDD_Nodes:
                         
 
     def diff(self, p, q):
-        @memoize
+        @lru_cache(maxsize=256)
         def _diff(p, q):
             if p.top > q.top:
                 return self.get(p.top, self.diff(p.lo, q), p.hi)
@@ -127,7 +121,7 @@ class ZBDD_Nodes:
 
 
     def count(self, p):
-        @memoize
+        @lru_cache(maxsize=256)
         def _count(p):
             return self.count(p.lo) + self.count(p.hi)
             
