@@ -17,15 +17,10 @@ class ZBDD_Nodes:
             # node elimination
             return lo
 
-        p = self.nodes.get((top, lo, hi), None)
-        return (p if p
-                else self.nodes.setdefault((top, lo, hi),
-                                           Bdd_node(top, lo, hi) ))
+        return self.nodes.setdefault((top, lo, hi), Bdd_node(top, lo, hi))
 
     def print(self):
         print(self.nodes)
-
-
 
     def subset1(self, p, var):
         @lru_cache(maxsize=256)
