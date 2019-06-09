@@ -33,7 +33,7 @@ class ZBDD_Nodes:
             return self.get(p.top,
                             self.subset1(p.lo, var),
                             self.subset1(p.hi, var) )
-            
+
         if (p == 0 or p == 1): return p
         if p.top < var: return p
         if p.top == var: return p.hi
@@ -58,7 +58,7 @@ class ZBDD_Nodes:
     def change(self, p, var):
         if p.top < var:
             return self.get(var, 0, p)
-        if p.top == var: 
+        if p.top == var:
             return self.get(var, p.hi, p.lo)
         # if p.top > var:
         return self.get(p.top,
@@ -67,7 +67,7 @@ class ZBDD_Nodes:
 
 
     def union(self, p, q):
-        @lru_cache(maxsize=256)        
+        @lru_cache(maxsize=256)
         def _union(p, q):
             if p.top > q.top:
                 return self.get(p.top, self.union(p.lo, q), p.hi)
@@ -81,7 +81,7 @@ class ZBDD_Nodes:
         if p == q: return p
         if p.top < q.top:
             # union is Commutative, for hit cache by lru_cache(maxsize=256)
-            return self.union(q, p)
+            return _union(q, p)
         return _union(p, q)
 
     def intersec(self, p, q):
@@ -90,17 +90,17 @@ class ZBDD_Nodes:
             return self.get(p.top,
                             self.intersec(p.lo, q.lo),
                             self.intersec(p.hi, q.hi) )
-            
+
         if p == 0: return 0
         if q == 0: return 0
         if p == q: return p
         if p.top < q.top:
-            return self.intersec(q, p)
+            return _intersec(q, p)
         if p.top > q.top:
             return self.intersec(p.lo, q)
         # if  p.top == q.top:
         return _intersec(p, q)
-                        
+
 
     def diff(self, p, q):
         @lru_cache(maxsize=256)
@@ -111,7 +111,7 @@ class ZBDD_Nodes:
             return self.get(p.top,
                             self.diff(p.lo, q.lo),
                             self.diff(p.hi, q.hi) )
-            
+
         if p == 0: return 0
         if q == 0: return p
         if p == q: return 0
@@ -124,7 +124,7 @@ class ZBDD_Nodes:
         @lru_cache(maxsize=256)
         def _count(p):
             return self.count(p.lo) + self.count(p.hi)
-            
+
         if p == 0: return 0
         if p == 1: return 1
         return _count(p)
@@ -139,5 +139,3 @@ if __name__ == '__main__':
     print(n.count(q))
     p = n.subset1(q, 1)
     print (p)
-
-    

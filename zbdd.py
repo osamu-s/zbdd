@@ -10,6 +10,11 @@ def memoize(f):
 
     return _wrapper
 
+class Bdd_node:
+    def __init__(self, top, lo, hi):
+        self.top = top
+        self.lo = lo
+        self.hi = hi
 
 class ZBDD_Nodes:
     def __init__(self):
